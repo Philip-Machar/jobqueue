@@ -48,6 +48,7 @@ func main() {
 			Body:        []byte(body),
 		},
 	)
+
 	if err != nil {
 		log.Fatal(err)
 	}
