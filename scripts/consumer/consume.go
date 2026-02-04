@@ -19,8 +19,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	defer ch.Close()
+
 	//consume jobs from rabbitmq of the queue stated
 	msgs, err := ch.Consume(
 		"jobs",
@@ -43,5 +43,4 @@ func main() {
 
 		msg.Ack(false)
 	}
-
 }
