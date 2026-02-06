@@ -17,11 +17,11 @@ func main() {
 		QueueName: "jobs",
 	}
 
-	publisher, err := queue.NewPublisher(&cfg)
+	rmq, err := queue.NewRabbitMQ(&cfg)
 	if err != nil {
 		log.Fatal("", err)
 	}
-	defer publisher.Close()
+	defer rmq.Close()
 
 	http.HandleFunc("/jobs", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -52,7 +52,7 @@ func main() {
 			return
 		}
 
-		if err := publisher.Publish([]byte(data)); err != nil {
+		if err := rmq.Publish([]byte(data)); err != nil {
 			http.Error(w, "Failed to enqueue job"+err.Error(), http.StatusInternalServerError)
 			return
 		}

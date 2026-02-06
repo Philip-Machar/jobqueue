@@ -1,29 +1,31 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 
 	amqp "github.com/rabbitmq/amqp091-go"
+
+	"jobqueue/internal/jobs"
+	"jobqueue/internal/queue"
 )
 
+const maxAttempts = 3
+
 func main() {
-	//create a tcp connection to rabbitmq
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
-	if err != nil {
-		log.Fatal(err)
+	cfg := queue.Config{
+		URL:       "amqp://guest:guest@localhost:5672/",
+		QueueName: "jobs",
 	}
 
-	defer conn.Close()
-	//create a channel in the connection
-	ch, err := conn.Channel()
+	rmq, err := queue.NewRabbitMQ(&cfg)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed to connect to rabbitmq: %v", err)
 	}
-	defer ch.Close()
+	defer rmq.Close()
 
-	//consume jobs from rabbitmq of the queue stated
-	msgs, err := ch.Consume(
-		"jobs",
+	msgs, err := rmq.Channel().Consume(
+		cfg.QueueName,
 		"",
 		false,
 		false,
@@ -31,16 +33,61 @@ func main() {
 		false,
 		nil,
 	)
-
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed to consume messages: %v", err)
 	}
-
-	log.Println("Waiting for jobs...")
 
 	for msg := range msgs {
-		log.Println("Received: ", string(msg.Body))
-
-		msg.Ack(false)
+		handleMessage(msg, rmq)
 	}
+}
+
+func handleMessage(msg amqp.Delivery, rmq *queue.RabbitMQ) {
+	var job jobs.Job
+
+	if err := json.Unmarshal(msg.Body, &job); err != nil {
+		log.Println("invalid job payload, discarded")
+		_ = msg.Nack(false, false)
+		return
+	}
+
+	log.Printf(
+		"processing job %s (type=%s, attempt=%d)",
+		job.ID,
+		job.Type,
+		job.Attempts,
+	)
+
+	// Simulated failure logic
+	if job.Attempts < maxAttempts-1 {
+		job.Attempts++
+
+		log.Printf(
+			"job %s failed, retrying (%d/%d)",
+			job.ID,
+			job.Attempts,
+			maxAttempts,
+		)
+
+		data, err := json.Marshal(job)
+		if err != nil {
+			log.Println("failed to re-marshal job, discarding")
+			_ = msg.Nack(false, false)
+			return
+		}
+
+		// Discard original message
+		_ = msg.Nack(false, false)
+
+		// Re-enqueue updated job
+		if err := rmq.Publish(data); err != nil {
+			log.Println("failed to re-publish job:", err)
+		}
+
+		return
+	}
+
+	// Success path
+	log.Printf("job %s succeeded", job.ID)
+	_ = msg.Ack(false)
 }

@@ -4,14 +4,14 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-type Publisher struct {
+type RabbitMQ struct {
 	conn  *amqp.Connection
 	ch    *amqp.Channel
 	queue string
 }
 
 // RabbitMQ constructor
-func NewPublisher(cfg *Config) (*Publisher, error) {
+func NewRabbitMQ(cfg *Config) (*RabbitMQ, error) {
 	//create tcp connection to rabbitmq
 	conn, err := amqp.Dial(cfg.URL)
 	if err != nil {
@@ -41,14 +41,18 @@ func NewPublisher(cfg *Config) (*Publisher, error) {
 		return nil, err
 	}
 
-	return &Publisher{
+	return &RabbitMQ{
 		conn:  conn,
 		ch:    ch,
 		queue: cfg.QueueName,
 	}, nil
 }
 
-func (r *Publisher) Publish(body []byte) error {
+func (r *RabbitMQ) Channel() *amqp.Channel {
+	return r.ch
+}
+
+func (r *RabbitMQ) Publish(body []byte) error {
 	return r.ch.Publish(
 		"",
 		r.queue,
@@ -61,7 +65,7 @@ func (r *Publisher) Publish(body []byte) error {
 	)
 }
 
-func (r *Publisher) Close() error {
+func (r *RabbitMQ) Close() error {
 	if err := r.ch.Close(); err != nil {
 		return err
 	}
