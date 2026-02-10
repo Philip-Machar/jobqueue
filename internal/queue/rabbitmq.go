@@ -12,32 +12,71 @@ type RabbitMQ struct {
 
 // RabbitMQ constructor
 func NewRabbitMQ(cfg *Config) (*RabbitMQ, error) {
-	//create tcp connection to rabbitmq
 	conn, err := amqp.Dial(cfg.URL)
 	if err != nil {
 		return nil, err
 	}
 
-	//create logical channel inside the tcp connection to rabbitmq
 	ch, err := conn.Channel()
 	if err != nil {
 		conn.Close()
 		return nil, err
 	}
 
-	//create a queue inside rabbitmq
-	_, err = ch.QueueDeclare(
-		cfg.QueueName,
+	// Dead-letter exchange
+	err = ch.ExchangeDeclare(
+		"jobs.dlx",
+		"direct",
 		true,
 		false,
 		false,
 		false,
 		nil,
 	)
-
 	if err != nil {
-		ch.Close()
-		conn.Close()
+		return nil, err
+	}
+
+	// Dead-letter queue
+	dlq, err := ch.QueueDeclare(
+		"jobs.dlq",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Bind DLQ to DLX
+	err = ch.QueueBind(
+		dlq.Name,
+		"jobs.dlq",
+		"jobs.dlx",
+		false,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Main queue with DLQ config
+	args := amqp.Table{
+		"x-dead-letter-exchange":    "jobs.dlx",
+		"x-dead-letter-routing-key": "jobs.dlq",
+	}
+
+	_, err = ch.QueueDeclare(
+		cfg.QueueName, // "jobs"
+		true,
+		false,
+		false,
+		false,
+		args,
+	)
+	if err != nil {
 		return nil, err
 	}
 
