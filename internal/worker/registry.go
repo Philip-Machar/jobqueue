@@ -1,0 +1,40 @@
+package worker
+
+import (
+	"sync"
+	"time"
+)
+
+type Registry struct {
+	mu      sync.Mutex
+	workers map[string]time.Time
+}
+
+func NewRegistry() *Registry {
+	return &Registry{
+		workers: make(map[string]time.Time),
+	}
+}
+
+func (r *Registry) Register(id string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.workers[id] = time.Now()
+}
+
+func (r *Registry) Heartbeat(id string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.workers[id] = time.Now()
+}
+
+func (r *Registry) List() map[string]time.Time {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	copy := make(map[string]time.Time)
+	for k, v := range r.workers {
+		copy[k] = v
+	}
+	return copy
+}

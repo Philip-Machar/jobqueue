@@ -1,18 +1,27 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"log"
+	"time"
 
+	"github.com/google/uuid"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"google.golang.org/grpc"
 
 	"jobqueue/internal/jobs"
 	"jobqueue/internal/queue"
+	"jobqueue/proto/workerpb"
 )
 
 const maxAttempts = 3
 
 func main() {
+
+	// -----------------------------------
+	// Connect to RabbitMQ
+	// -----------------------------------
 	cfg := queue.Config{
 		URL:       "amqp://guest:guest@localhost:5672/",
 		QueueName: "jobs",
@@ -24,7 +33,51 @@ func main() {
 	}
 	defer rmq.Close()
 
-	// Multiple workers safely
+	// -----------------------------------
+	// Connect to API via gRPC
+	// -----------------------------------
+	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("failed to connect to API gRPC server: %v", err)
+	}
+	defer conn.Close()
+
+	client := workerpb.NewWorkerServiceClient(conn)
+
+	workerID := uuid.NewString()
+
+	// Register worker
+	_, err = client.Register(context.Background(), &workerpb.RegisterRequest{
+		WorkerId: workerID,
+	})
+	if err != nil {
+		log.Fatalf("failed to register worker: %v", err)
+	}
+
+	log.Printf("Worker registered with ID: %s", workerID)
+
+	// -----------------------------------
+	// Start Heartbeat Loop
+	// -----------------------------------
+	go func() {
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			_, err := client.Heartbeat(context.Background(), &workerpb.HeartbeatRequest{
+				WorkerId: workerID,
+			})
+			if err != nil {
+				log.Println("heartbeat failed:", err)
+				continue
+			}
+			log.Println("heartbeat sent")
+		}
+	}()
+
+	// -----------------------------------
+	// RabbitMQ Consumer Setup
+	// -----------------------------------
 	if err := rmq.Channel().Qos(1, 0, false); err != nil {
 		log.Fatalf("Failed to set Qos %v", err)
 	}
@@ -42,7 +95,7 @@ func main() {
 		log.Fatalf("failed to consume messages: %v", err)
 	}
 
-	log.Println("Worker started")
+	log.Println("Worker started and consuming jobs")
 
 	for msg := range msgs {
 		handleMessage(msg, rmq)
