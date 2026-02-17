@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package worker;
 
-option go_package = "jobqueue/proto/workerpb";
+option go_package = "./workerpb;workerpb";
 
 service WorkerService {
   rpc Register(RegisterRequest) returns (RegisterResponse);

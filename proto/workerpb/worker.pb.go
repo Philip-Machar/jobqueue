@@ -7,12 +7,11 @@
 package workerpb
 
 import (
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
-
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -213,7 +212,7 @@ const file_proto_worker_proto_rawDesc = "" +
 	"\x06status\x18\x01 \x01(\tR\x06status2\x90\x01\n" +
 	"\rWorkerService\x12=\n" +
 	"\bRegister\x12\x17.worker.RegisterRequest\x1a\x18.worker.RegisterResponse\x12@\n" +
-	"\tHeartbeat\x12\x18.worker.HeartbeatRequest\x1a\x19.worker.HeartbeatResponseB\x19Z\x17jobqueue/proto/workerpbb\x06proto3"
+	"\tHeartbeat\x12\x18.worker.HeartbeatRequest\x1a\x19.worker.HeartbeatResponseB\x15Z\x13./workerpb;workerpbb\x06proto3"
 
 var (
 	file_proto_worker_proto_rawDescOnce sync.Once

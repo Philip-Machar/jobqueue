@@ -44,12 +44,10 @@ func main() {
 
 	client := workerpb.NewWorkerServiceClient(conn)
 
-	workerID := uuid.NewString()
+	workerID := uuid.NewString() 
 
 	// Register worker
-	_, err = client.Register(context.Background(), &workerpb.RegisterRequest{
-		WorkerId: workerID,
-	})
+	_, err = client.Register(context.Background(), &workerpb.RegisterRequest{WorkerId: workerID})
 	if err != nil {
 		log.Fatalf("failed to register worker: %v", err)
 	}
@@ -64,9 +62,7 @@ func main() {
 		defer ticker.Stop()
 
 		for range ticker.C {
-			_, err := client.Heartbeat(context.Background(), &workerpb.HeartbeatRequest{
-				WorkerId: workerID,
-			})
+			_, err := client.Heartbeat(context.Background(), &workerpb.HeartbeatRequest{WorkerId: workerID})
 			if err != nil {
 				log.Println("heartbeat failed:", err)
 				continue
