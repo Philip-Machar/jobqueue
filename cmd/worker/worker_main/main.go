@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"jobqueue/internal/jobs"
 	"jobqueue/internal/queue"
@@ -36,7 +37,7 @@ func main() {
 	// -----------------------------------
 	// Connect to API via gRPC
 	// -----------------------------------
-	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("failed to connect to API gRPC server: %v", err)
 	}
@@ -44,7 +45,7 @@ func main() {
 
 	client := workerpb.NewWorkerServiceClient(conn)
 
-	workerID := uuid.NewString() 
+	workerID := uuid.NewString()
 
 	// Register worker
 	_, err = client.Register(context.Background(), &workerpb.RegisterRequest{WorkerId: workerID})
@@ -92,8 +93,10 @@ func main() {
 	}
 
 	log.Println("Worker started and consuming jobs")
+	log.Println("Waiting for job messages...")
 
 	for msg := range msgs {
+		log.Println("Received message from queue")
 		handleMessage(msg, rmq)
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"time"
 
 	"jobqueue/internal/jobs"
 	"jobqueue/internal/queue"
@@ -36,6 +37,15 @@ func main() {
 	// -----------------------------
 	reg := worker.NewRegistry()
 
+	//registry cleanup
+	go func() {
+		ticker := time.NewTicker(time.Second * 5)
+
+		for range ticker.C {
+			reg.CleanupExpired()
+		}
+	}()
+
 	// -----------------------------
 	// gRPC Server Setup (for workers)
 	// -----------------------------
@@ -48,7 +58,7 @@ func main() {
 	workerpb.RegisterWorkerServiceServer(grpcServer, worker.NewGRPCServer(reg))
 
 	go func() {
-		log.Println("gRPC server listening on :50051")
+		log.Println("gRPC server listening on :50051...")
 		if err := grpcServer.Serve(lis); err != nil {
 			log.Fatal(err)
 		}
