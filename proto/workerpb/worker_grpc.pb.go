@@ -19,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	WorkerService_Register_FullMethodName  = "/worker.WorkerService/Register"
-	WorkerService_Heartbeat_FullMethodName = "/worker.WorkerService/Heartbeat"
+	WorkerService_Register_FullMethodName    = "/worker.WorkerService/Register"
+	WorkerService_Heartbeat_FullMethodName   = "/worker.WorkerService/Heartbeat"
+	WorkerService_ListWorkers_FullMethodName = "/worker.WorkerService/ListWorkers"
 )
 
 // WorkerServiceClient is the client API for WorkerService service.
@@ -29,6 +30,7 @@ const (
 type WorkerServiceClient interface {
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
 	Heartbeat(ctx context.Context, in *HeartbeatRequest, opts ...grpc.CallOption) (*HeartbeatResponse, error)
+	ListWorkers(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*WorkerList, error)
 }
 
 type workerServiceClient struct {
@@ -59,12 +61,23 @@ func (c *workerServiceClient) Heartbeat(ctx context.Context, in *HeartbeatReques
 	return out, nil
 }
 
+func (c *workerServiceClient) ListWorkers(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*WorkerList, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(WorkerList)
+	err := c.cc.Invoke(ctx, WorkerService_ListWorkers_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // WorkerServiceServer is the server API for WorkerService service.
 // All implementations must embed UnimplementedWorkerServiceServer
 // for forward compatibility.
 type WorkerServiceServer interface {
 	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
 	Heartbeat(context.Context, *HeartbeatRequest) (*HeartbeatResponse, error)
+	ListWorkers(context.Context, *Empty) (*WorkerList, error)
 	mustEmbedUnimplementedWorkerServiceServer()
 }
 
@@ -80,6 +93,9 @@ func (UnimplementedWorkerServiceServer) Register(context.Context, *RegisterReque
 }
 func (UnimplementedWorkerServiceServer) Heartbeat(context.Context, *HeartbeatRequest) (*HeartbeatResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Heartbeat not implemented")
+}
+func (UnimplementedWorkerServiceServer) ListWorkers(context.Context, *Empty) (*WorkerList, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListWorkers not implemented")
 }
 func (UnimplementedWorkerServiceServer) mustEmbedUnimplementedWorkerServiceServer() {}
 func (UnimplementedWorkerServiceServer) testEmbeddedByValue()                       {}
@@ -138,6 +154,24 @@ func _WorkerService_Heartbeat_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _WorkerService_ListWorkers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WorkerServiceServer).ListWorkers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: WorkerService_ListWorkers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WorkerServiceServer).ListWorkers(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // WorkerService_ServiceDesc is the grpc.ServiceDesc for WorkerService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -152,6 +186,10 @@ var WorkerService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Heartbeat",
 			Handler:    _WorkerService_Heartbeat_Handler,
+		},
+		{
+			MethodName: "ListWorkers",
+			Handler:    _WorkerService_ListWorkers_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

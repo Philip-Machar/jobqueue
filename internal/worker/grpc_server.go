@@ -24,6 +24,22 @@ func (s *GRPCServer) Register(ctx context.Context, req *workerpb.RegisterRequest
 }
 
 func (s *GRPCServer) Heartbeat(ctx context.Context, req *workerpb.HeartbeatRequest) (*workerpb.HeartbeatResponse, error) {
-	s.registry.Heartbeat(req.WorkerId)
+	s.registry.UpdateLoad(req.WorkerId, req.Load)
 	return &workerpb.HeartbeatResponse{Status: "alive"}, nil
+}
+
+func (s *GRPCServer) ListWorkers(ctx context.Context, _ *workerpb.Empty) (*workerpb.WorkerList, error) {
+	snapshot := s.registry.List()
+
+	resp := &workerpb.WorkerList{}
+
+	for id, info := range snapshot {
+		resp.Workers = append(resp.Workers, &workerpb.Worker{
+			WorkerId:     id,
+			LastSeenUnix: info.LastSeen.Unix(),
+			Load:         info.Load,
+		})
+	}
+
+	return resp, nil
 }

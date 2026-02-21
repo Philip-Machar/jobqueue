@@ -2,11 +2,12 @@ syntax = "proto3";
 
 package worker;
 
-option go_package = "./workerpb;workerpb";
+option go_package = "./proto/workerpb;workerpb";
 
 service WorkerService {
   rpc Register(RegisterRequest) returns (RegisterResponse);
   rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+  rpc ListWorkers(Empty) returns (WorkerList);
 }
 
 message RegisterRequest {
@@ -19,8 +20,21 @@ message RegisterResponse {
 
 message HeartbeatRequest {
   string worker_id = 1;
+  int32 load = 2;
 }
 
 message HeartbeatResponse {
   string status = 1;
+}
+
+message Empty {}
+
+message Worker {
+  string worker_id = 1;
+  int64 last_seen_unix = 2;
+  int32 load = 3;
+}
+
+message WorkerList {
+  repeated Worker workers = 1;
 }

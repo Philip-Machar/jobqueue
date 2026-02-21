@@ -21,6 +21,11 @@ const maxAttempts = 3
 func main() {
 
 	// -----------------------------------
+	// Worker load state (0 = idle, 1 = busy)
+	// -----------------------------------
+	var currentLoad int32 = 0
+
+	// -----------------------------------
 	// Connect to RabbitMQ
 	// -----------------------------------
 	cfg := queue.Config{
@@ -37,7 +42,10 @@ func main() {
 	// -----------------------------------
 	// Connect to API via gRPC
 	// -----------------------------------
-	conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(
+		"localhost:50051",
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 	if err != nil {
 		log.Fatalf("failed to connect to API gRPC server: %v", err)
 	}
@@ -47,8 +55,13 @@ func main() {
 
 	workerID := uuid.NewString()
 
+	// -----------------------------------
 	// Register worker
-	_, err = client.Register(context.Background(), &workerpb.RegisterRequest{WorkerId: workerID})
+	// -----------------------------------
+	_, err = client.Register(
+		context.Background(),
+		&workerpb.RegisterRequest{WorkerId: workerID},
+	)
 	if err != nil {
 		log.Fatalf("failed to register worker: %v", err)
 	}
@@ -56,19 +69,25 @@ func main() {
 	log.Printf("Worker registered with ID: %s", workerID)
 
 	// -----------------------------------
-	// Start Heartbeat Loop
+	// Start Heartbeat Loop (includes load)
 	// -----------------------------------
 	go func() {
 		ticker := time.NewTicker(5 * time.Second)
 		defer ticker.Stop()
 
 		for range ticker.C {
-			_, err := client.Heartbeat(context.Background(), &workerpb.HeartbeatRequest{WorkerId: workerID})
+			_, err := client.Heartbeat(
+				context.Background(),
+				&workerpb.HeartbeatRequest{
+					WorkerId: workerID,
+					Load:     currentLoad,
+				},
+			)
 			if err != nil {
 				log.Println("heartbeat failed:", err)
 				continue
 			}
-			log.Println("heartbeat sent")
+			log.Printf("heartbeat sent (load=%d)", currentLoad)
 		}
 	}()
 
@@ -97,7 +116,14 @@ func main() {
 
 	for msg := range msgs {
 		log.Println("Received message from queue")
+
+		// Worker becomes busy
+		currentLoad = 1
+
 		handleMessage(msg, rmq)
+
+		// Worker becomes idle
+		currentLoad = 0
 	}
 }
 
@@ -117,7 +143,9 @@ func handleMessage(msg amqp.Delivery, rmq *queue.RabbitMQ) {
 		job.Attempts,
 	)
 
+	// -----------------------------------
 	// Simulated failure logic
+	// -----------------------------------
 	if job.Attempts < maxAttempts-1 {
 		job.Attempts++
 

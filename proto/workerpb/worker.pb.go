@@ -112,6 +112,7 @@ func (x *RegisterResponse) GetStatus() string {
 type HeartbeatRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	WorkerId      string                 `protobuf:"bytes,1,opt,name=worker_id,json=workerId,proto3" json:"worker_id,omitempty"`
+	Load          int32                  `protobuf:"varint,2,opt,name=load,proto3" json:"load,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -151,6 +152,13 @@ func (x *HeartbeatRequest) GetWorkerId() string {
 		return x.WorkerId
 	}
 	return ""
+}
+
+func (x *HeartbeatRequest) GetLoad() int32 {
+	if x != nil {
+		return x.Load
+	}
+	return 0
 }
 
 type HeartbeatResponse struct {
@@ -197,6 +205,146 @@ func (x *HeartbeatResponse) GetStatus() string {
 	return ""
 }
 
+type Empty struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Empty) Reset() {
+	*x = Empty{}
+	mi := &file_proto_worker_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Empty) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Empty) ProtoMessage() {}
+
+func (x *Empty) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_worker_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Empty.ProtoReflect.Descriptor instead.
+func (*Empty) Descriptor() ([]byte, []int) {
+	return file_proto_worker_proto_rawDescGZIP(), []int{4}
+}
+
+type Worker struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	WorkerId      string                 `protobuf:"bytes,1,opt,name=worker_id,json=workerId,proto3" json:"worker_id,omitempty"`
+	LastSeenUnix  int64                  `protobuf:"varint,2,opt,name=last_seen_unix,json=lastSeenUnix,proto3" json:"last_seen_unix,omitempty"`
+	Load          int32                  `protobuf:"varint,3,opt,name=load,proto3" json:"load,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Worker) Reset() {
+	*x = Worker{}
+	mi := &file_proto_worker_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Worker) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Worker) ProtoMessage() {}
+
+func (x *Worker) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_worker_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Worker.ProtoReflect.Descriptor instead.
+func (*Worker) Descriptor() ([]byte, []int) {
+	return file_proto_worker_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *Worker) GetWorkerId() string {
+	if x != nil {
+		return x.WorkerId
+	}
+	return ""
+}
+
+func (x *Worker) GetLastSeenUnix() int64 {
+	if x != nil {
+		return x.LastSeenUnix
+	}
+	return 0
+}
+
+func (x *Worker) GetLoad() int32 {
+	if x != nil {
+		return x.Load
+	}
+	return 0
+}
+
+type WorkerList struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Workers       []*Worker              `protobuf:"bytes,1,rep,name=workers,proto3" json:"workers,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WorkerList) Reset() {
+	*x = WorkerList{}
+	mi := &file_proto_worker_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WorkerList) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WorkerList) ProtoMessage() {}
+
+func (x *WorkerList) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_worker_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WorkerList.ProtoReflect.Descriptor instead.
+func (*WorkerList) Descriptor() ([]byte, []int) {
+	return file_proto_worker_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *WorkerList) GetWorkers() []*Worker {
+	if x != nil {
+		return x.Workers
+	}
+	return nil
+}
+
 var File_proto_worker_proto protoreflect.FileDescriptor
 
 const file_proto_worker_proto_rawDesc = "" +
@@ -205,14 +353,24 @@ const file_proto_worker_proto_rawDesc = "" +
 	"\x0fRegisterRequest\x12\x1b\n" +
 	"\tworker_id\x18\x01 \x01(\tR\bworkerId\"*\n" +
 	"\x10RegisterResponse\x12\x16\n" +
-	"\x06status\x18\x01 \x01(\tR\x06status\"/\n" +
+	"\x06status\x18\x01 \x01(\tR\x06status\"C\n" +
 	"\x10HeartbeatRequest\x12\x1b\n" +
-	"\tworker_id\x18\x01 \x01(\tR\bworkerId\"+\n" +
+	"\tworker_id\x18\x01 \x01(\tR\bworkerId\x12\x12\n" +
+	"\x04load\x18\x02 \x01(\x05R\x04load\"+\n" +
 	"\x11HeartbeatResponse\x12\x16\n" +
-	"\x06status\x18\x01 \x01(\tR\x06status2\x90\x01\n" +
+	"\x06status\x18\x01 \x01(\tR\x06status\"\a\n" +
+	"\x05Empty\"_\n" +
+	"\x06Worker\x12\x1b\n" +
+	"\tworker_id\x18\x01 \x01(\tR\bworkerId\x12$\n" +
+	"\x0elast_seen_unix\x18\x02 \x01(\x03R\flastSeenUnix\x12\x12\n" +
+	"\x04load\x18\x03 \x01(\x05R\x04load\"6\n" +
+	"\n" +
+	"WorkerList\x12(\n" +
+	"\aworkers\x18\x01 \x03(\v2\x0e.worker.WorkerR\aworkers2\xc2\x01\n" +
 	"\rWorkerService\x12=\n" +
 	"\bRegister\x12\x17.worker.RegisterRequest\x1a\x18.worker.RegisterResponse\x12@\n" +
-	"\tHeartbeat\x12\x18.worker.HeartbeatRequest\x1a\x19.worker.HeartbeatResponseB\x15Z\x13./workerpb;workerpbb\x06proto3"
+	"\tHeartbeat\x12\x18.worker.HeartbeatRequest\x1a\x19.worker.HeartbeatResponse\x120\n" +
+	"\vListWorkers\x12\r.worker.Empty\x1a\x12.worker.WorkerListB\x1bZ\x19./proto/workerpb;workerpbb\x06proto3"
 
 var (
 	file_proto_worker_proto_rawDescOnce sync.Once
@@ -226,23 +384,29 @@ func file_proto_worker_proto_rawDescGZIP() []byte {
 	return file_proto_worker_proto_rawDescData
 }
 
-var file_proto_worker_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_proto_worker_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_proto_worker_proto_goTypes = []any{
 	(*RegisterRequest)(nil),   // 0: worker.RegisterRequest
 	(*RegisterResponse)(nil),  // 1: worker.RegisterResponse
 	(*HeartbeatRequest)(nil),  // 2: worker.HeartbeatRequest
 	(*HeartbeatResponse)(nil), // 3: worker.HeartbeatResponse
+	(*Empty)(nil),             // 4: worker.Empty
+	(*Worker)(nil),            // 5: worker.Worker
+	(*WorkerList)(nil),        // 6: worker.WorkerList
 }
 var file_proto_worker_proto_depIdxs = []int32{
-	0, // 0: worker.WorkerService.Register:input_type -> worker.RegisterRequest
-	2, // 1: worker.WorkerService.Heartbeat:input_type -> worker.HeartbeatRequest
-	1, // 2: worker.WorkerService.Register:output_type -> worker.RegisterResponse
-	3, // 3: worker.WorkerService.Heartbeat:output_type -> worker.HeartbeatResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	5, // 0: worker.WorkerList.workers:type_name -> worker.Worker
+	0, // 1: worker.WorkerService.Register:input_type -> worker.RegisterRequest
+	2, // 2: worker.WorkerService.Heartbeat:input_type -> worker.HeartbeatRequest
+	4, // 3: worker.WorkerService.ListWorkers:input_type -> worker.Empty
+	1, // 4: worker.WorkerService.Register:output_type -> worker.RegisterResponse
+	3, // 5: worker.WorkerService.Heartbeat:output_type -> worker.HeartbeatResponse
+	6, // 6: worker.WorkerService.ListWorkers:output_type -> worker.WorkerList
+	4, // [4:7] is the sub-list for method output_type
+	1, // [1:4] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_proto_worker_proto_init() }
@@ -256,7 +420,7 @@ func file_proto_worker_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_worker_proto_rawDesc), len(file_proto_worker_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
